@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Licensed to Jasig under one or more contributor license
+    agreements. See the NOTICE file distributed with this work
+    for additional information regarding copyright ownership.
+    Jasig licenses this file to you under the Apache License,
+    Version 2.0 (the "License"); you may not use this file
+    except in compliance with the License.  You may obtain a
+    copy of the License at the following location:
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+#cas的认证管理器，认证管理都在这个文件里，可以说进行cas开发，你需要更改的文件中，这是第一个
+-->
+<!--
+| deployerConfigContext.xml centralizes into one file some of the declarative configuration that
+| all CAS deployers will need to modify.
+|
+| This file declares some of the Spring-managed JavaBeans that make up a CAS deployment.  
+| The beans declared in this file are instantiated at context initialization time by the Spring 
+| ContextLoaderListener declared in web.xml.  It finds this file because this
+| file is among those declared in the context parameter "contextConfigLocation".
+|
+| By far the most common change you will need to make in this file is to change the last bean
+| declaration to replace the default authentication handler with
+| one implementing your approach for authenticating usernames and passwords.
++-->
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:c="http://www.springframework.org/schema/c"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:util="http://www.springframework.org/schema/util"
+       xmlns:sec="http://www.springframework.org/schema/security"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+       http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.2.xsd
+       http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-3.2.xsd
+       http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd
+       http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd">
+
+    <context:annotation-config/>
+
+    <bean class="org.jasig.cas.authentication.handler.support.HttpBasedServiceCredentialsAuthenticationHandler"
+          p:httpClient-ref="httpClient" p:requireSecure="false"/>
+
+    <!-- 数据库连接池 -->
+    <!--     <bean id="casDataSource" class="com.alibaba.druid.pool.DruidDataSource">
+            <property name="driverClassName" value="com.mysql.jdbc.Driver"/>
+            <property name="url" value="jdbc:mysql://128.64.151.251/wisdomcloud"/>
+            <property name="username" value="root"/>
+            <property name="password" value="Cc1234=="/>
+        </bean> -->
+       <bean id="casDataSource" class="com.alibaba.druid.pool.DruidDataSource">
+            <property name="driverClassName" value="com.mysql.jdbc.Driver"/>
+            <property name="url" value="jdbc:mysql://127.0.0.1/auth_db"/>
+            <property name="username" value="root"/>
+            <property name="password" value="root"/>
+            <property name="validationQuery" value="select 1 from dual"/>
+        </bean>
+    <!--<bean id="casDataSource" class="com.alibaba.druid.pool.DruidDataSource">-->
+        <!--<property name="driverClassName" value="oracle.jdbc.driver.OracleDriver"/>-->
+        <!--<property name="url" value="jdbc:oracle:thin:@172.16.10.2:1521:orcl"/>-->
+        <!--<property name="username" value="auth"/>-->
+        <!--<property name="password" value="123456"/>-->
+        <!--<property name="validationQuery" value="select 1 from dual"/>-->
+    <!--</bean>-->
+    <!--
+       | The authentication manager defines security policy for authentication by specifying at a minimum
+       | the authentication handlers that will be used to authenticate credential. While the AuthenticationManager
+       | interface supports plugging in another implementation, the default PolicyBasedAuthenticationManager should
+       | be sufficient in most cases.
+       +-->
+    <bean id="authenticationManager" class="cn.seisys.auth.authentication.PolicyBasedAuthenticationManager">
+        <constructor-arg>
+            <map>
+                <!--
+                   | IMPORTANT
+                   | Every handler requires a unique name.
+                   | If more than one instance of the same handler class is configured, you must explicitly
+                   | set its name to something other than its default name (typically the simple class name).
+                   -->
+                <entry key-ref="proxyAuthenticationHandler" value-ref="proxyPrincipalResolver"/>
+                <entry key-ref="queryDatabaseAuthenticationHandler" value-ref="queryDatabasePrincipalResolver"/>
+                <!-- <entry key-ref="primaryAuthenticationHandler" value-ref="primaryPrincipalResolver" /> -->
+            </map>
+        </constructor-arg>
+
+        <!-- Uncomment the metadata populator to allow clearpass to capture and cache the password
+             This switch effectively will turn on clearpass.
+        <property name="authenticationMetaDataPopulators">
+           <util:list>
+              <bean class="org.jasig.cas.extension.clearpass.CacheCredentialsMetaDataPopulator"
+                    c:credentialCache-ref="encryptedMap" />
+           </util:list>
+        </property>
+        -->
+
+        <!--
+           | Defines the security policy around authentication. Some alternative policies that ship with CAS:
+           |
+           | * NotPreventedAuthenticationPolicy - all credential must either pass or fail authentication
+           | * AllAuthenticationPolicy - all presented credential must be authenticated successfully
+           | * RequiredHandlerAuthenticationPolicy - specifies a handler that must authenticate its credential to pass
+           -->
+        <property name="authenticationPolicy">
+            <bean class="org.jasig.cas.authentication.AnyAuthenticationPolicy"/>
+        </property>
+    </bean>
+
+    <bean id="auditTrailManager" class="com.github.inspektr.audit.support.Slf4jLoggingAuditTrailManager"/>
+
+    <!-- Required for proxy ticket mechanism. -->
+    <bean id="proxyAuthenticationHandler"
+          class="org.jasig.cas.authentication.handler.support.HttpBasedServiceCredentialsAuthenticationHandler"
+          p:httpClient-ref="httpClient"/>
+
+    <!--
+       | TODO: Replace this component with one suitable for your enviroment.
+       |
+       | This component provides authentication for the kind of credential used in your environment. In most cases
+       | credential is a username/password pair that lives in a system of record like an LDAP directory.
+       | The most common authentication handler beans:
+       |
+       | * org.jasig.cas.authentication.LdapAuthenticationHandler
+       | * org.jasig.cas.adaptors.jdbc.QueryDatabaseAuthenticationHandler
+       | * org.jasig.cas.adaptors.x509.authentication.handler.support.X509CredentialsAuthenticationHandler
+       | * org.jasig.cas.support.spnego.authentication.handler.support.JCIFSSpnegoAuthenticationHandler
+       -->
+    <bean id="primaryAuthenticationHandler"
+          class="org.jasig.cas.authentication.AcceptUsersAuthenticationHandler">
+        <property name="users">
+            <map>
+                <entry key="casuser" value="Mellon"/>
+            </map>
+        </property>
+    </bean>
+
+    <!-- 数据库检索验证 for mysql-->
+    <bean id="queryDatabaseAuthenticationHandler" class="cn.seisys.auth.authentication.QueryDatabaseAuthenticationHandler">
+        <property name="dataSource" ref="casDataSource"/>
+        <property name="passwordEncoder" ref="defaultPasswordEncoder"/>
+        <property name="sqlUser" value="select * from sys_user where lower(userid) = lower(?)"/>
+        <property name="sqlUpdatePassErrorCount" value="update sys_user set PASS_ERROR_COUNT = (?) where lower(userid) = lower(?)"/>
+        <property name="sqlUpdateAvailable" value="update sys_user set AVAILABLE = (?) where lower(userid) = lower(?)"/>
+        <property name="sqlUpdateLoginTime" value="update sys_user set PROPERTY1 = (?),PROPERTY2 = (?) where lower(userid) = lower(?)"/>
+        <property name="sqlUserIp" value="select ip_addr from sys_user_ip where user_id = ?"/>
+        <property name="sqlSysIPBlacklist" value="select IP_ADDR from SYS_IP_BLACKLIST"/>
+        <property name="sqlSysIPWhitelist" value="select IP_ADDR from SYS_IP_WHITELIST"/>
+        <property name="sqlInsertSysIPBlacklist" value="insert into SYS_IP_BLACKLIST(ID,IP_ADDR,CREATE_TIME) values(?,?,sysdate)"/>
+        <property name="sqlGroupId" value="select group_id from sys_group_relation where user_id = ?"/>
+        <property name="sqlRoleId" value="select role_id from sys_user_role where user_id = ?"/>
+        <property name="sqlRole" value="select t2.role from sys_user_role t1, sys_role t2 where t1.role_id=t2.id and t1.user_id = ?"/>
+        <property name="sqlGroup" value="select t1.* from sys_group_relation t, sys_group t1 where t.group_id = t1.id and t.user_id = ?"/>
+        <property name="sqlPermissions" value="select * from sys_permission"/>
+        <property name="sqlInsertLog" value="insert into sys_operation_log (userid, username) values (?, ?)"/>
+        <property name="sqlInsertToken" value="insert into sys_token (userid, token, createtime, description, loginip) values (?, ?, ?, ?, ?)"/>
+        <property name="sqlDeleteToken" value="delete from sys_token"/>
+        <property name="maxPasswordErrorCount" value="${max.password.error.count}"/>
+    </bean>
+
+
+    <!-- 密码加密 -->
+    <bean id="plainTextPasswordEncoder" class="org.jasig.cas.authentication.handler.PlainTextPasswordEncoder"/>
+
+    <bean id="defaultPasswordEncoder" class="org.jasig.cas.authentication.handler.DefaultPasswordEncoder">
+        <constructor-arg value="MD5"/>
+    </bean>
+
+    <bean id="queryDatabasePrincipalResolver"
+          class="org.jasig.cas.authentication.principal.PersonDirectoryPrincipalResolver">
+        <property name="attributeRepository" ref="attributeRepository"/>
+    </bean>
+
+    <!-- Required for proxy ticket mechanism -->
+    <bean id="proxyPrincipalResolver"
+          class="org.jasig.cas.authentication.principal.BasicPrincipalResolver"/>
+
+    <!--
+       | Resolves a principal from a credential using an attribute repository that is configured to resolve
+       | against a deployer-specific store (e.g. LDAP).
+       -->
+    <bean id="primaryPrincipalResolver"
+          class="org.jasig.cas.authentication.principal.PersonDirectoryPrincipalResolver">
+        <property name="attributeRepository" ref="attributeRepository"/>
+    </bean>
+
+    <!--
+    Bean that defines the attributes that a service may return.  This example uses the Stub/Mock version.  A real implementation
+    may go against a database or LDAP server.  The id should remain "attributeRepository" though.
+    +-->
+    <bean id="attributeRepository" class="org.jasig.services.persondir.support.StubPersonAttributeDao"
+          p:backingMap-ref="attrRepoBackingMap"/>
+
+    <util:map id="attrRepoBackingMap">
+        <entry key="uid" value="uid"/>
+        <entry key="eduPersonAffiliation" value="eduPersonAffiliation"/>
+        <entry key="groupMembership" value="groupMembership"/>
+    </util:map>
+
+    <!-- 
+    Sample, in-memory data store for the ServiceRegistry. A real implementation
+    would probably want to replace this with the JPA-backed ServiceRegistry DAO
+    The name of this bean should remain "serviceRegistryDao".
+    +-->
+    <bean id="serviceRegistryDao" class="org.jasig.cas.services.InMemoryServiceRegistryDaoImpl"
+          p:registeredServices-ref="registeredServicesList"/>
+
+    <util:list id="registeredServicesList">
+        <bean class="org.jasig.cas.services.RegexRegisteredService">
+            <property name="id" value="0"/>
+            <property name="name" value="HTTP and IMAP"/>
+            <property name="description" value="Allows HTTP(S) and IMAP(S) protocols and IMAP"/>
+            <property name="serviceId" value="^(https?|imaps?)://.*"/>
+            <property name="evaluationOrder" value="10000001"/>
+            <property name="allowedAttributes">
+                <list>
+                    <value>id</value>
+                    <value>userid</value>
+                    <value>username</value>
+                    <value>description</value>
+                    <value>email</value>
+                    <value>mobile</value>
+                    <value>status</value>
+                    <value>max_online</value>
+                    <value>timeout</value>
+                    <value>valid_time_begin</value>
+                    <value>valid_time_end</value>
+                    <value>deleted</value>
+                    <value>available</value>
+                    <value>pass_valid_time</value>
+                    <value>pass_error_count</value>
+                    <value>property3</value>
+                    <value>property4</value>
+                    <value>property5</value>
+                    <value>property6</value>
+                    <value>property7</value>
+                    <value>property8</value>
+                    <value>property9</value>
+                    <value>property10</value>
+                    <value>organizationId</value>
+                    <value>organizationName</value>
+                    <value>groupId</value>
+                    <value>groups</value>
+                    <value>roles</value>
+                    <value>roleSigns</value>
+                    <value>permissions</value>
+                    <value>menus</value>
+                    <value>token</value>
+                </list>
+            </property>
+        </bean>
+    </util:list>
+
+
+    <bean id="healthCheckMonitor" class="org.jasig.cas.monitor.HealthCheckMonitor" p:monitors-ref="monitorsList"/>
+
+    <util:list id="monitorsList">
+        <bean class="org.jasig.cas.monitor.MemoryMonitor" p:freeMemoryWarnThreshold="10"/>
+        <!--
+          NOTE
+          The following ticket registries support SessionMonitor:
+            * DefaultTicketRegistry
+            * JpaTicketRegistry
+          Remove this monitor if you use an unsupported registry.
+        -->
+        <bean class="org.jasig.cas.monitor.SessionMonitor"
+              p:ticketRegistry-ref="ticketRegistry"
+              p:serviceTicketCountWarnThreshold="5000"
+              p:sessionCountWarnThreshold="100000"/>
+    </util:list>
+</beans>

@@ -1,0 +1,39 @@
+@charset "UTF-8";
+/* CSS login */
+body,html {background:url(../images/login/login_bg.jpg) no-repeat top center #27589e;margin:0px auto;font-size:12px; width:100%; height:100%; font-family:微软雅黑}
+/*--------------fream----------------**/
+.log_container {margin:0 auto;padding:0;width:896px;}
+.logo { float:left; width:896px; text-align:left; text-indent:10px;}
+.log_box { float:left; width:896px;margin-top:72px; padding-top:50px;}
+.img_rotation { float:left; width:477px; height:368px; background-color:#26589e;}
+.mainbox{overflow:hidden;position:relative;}
+.flashbox{overflow:hidden;position:relative;}
+.imagebox{text-align:left;position:relative;z-index:999; margin-left:20px;}
+.bitdiv{display:inline-block;width:8px;height:8px;margin:0 5px 5px 0;cursor:pointer; float:left;}
+.defimg{background:url(../images/01.png) no-repeat;}
+.curimg{background:url(../images/02.png) no-repeat;}
+
+.log_inner_box {float:left; background:url(../images/login/login_windows.jpg) no-repeat; width:419px; height:368px;/* margin-top:2px; */}
+.log_mid {float:left; width:419px; padding:110px 0 15px 0; margin:0; display:inline;}
+.log_mid li {float:left; width:419px; margin:10px 0; padding:0; height:34px; line-height:34px;display:inline;}
+.log_mid li  span{float:left; margin:0px 3px;}
+.log_mid li .log_user,
+.log_mid li .log_pwd {color:#fff; text-align:right; font-size:14px; background:url(../images/login/ico_user.png) no-repeat center right; width:62px; height:33px;}
+.log_mid li .log_pwd { background:url(../images/login/ico_pwd.png) no-repeat center right;}
+.log_mid li .log_txt {color:#000; text-align:left; font-size:12px;width:306px;}
+/*text*/
+.log_mid li .txt_log {width:180px; height:33px;line-height:33px;  border:none; text-indent:5px; font-size:16px;font-family:微软雅黑; color:#333; border:solid 1px #ccc; background-color:#fff;width:304px;}
+.log_mid li .txt_log:hover,.txt_click { color:#245c9a; border:solid 1px #f9daa8; background-color:#fff;}
+.log_mid li .log_err { float:left;color:#FF7F00; text-align:center;font-size:16px; width:419px;}
+.correct { background:url(../images/login/ico_right.png) no-repeat center right;}
+.error { background:url(../images/login/ico_error.png) no-repeat center right;}
+
+/*login*/
+.log_btn,.log_btn_click{ background:url(../images/login/btn_login.png) no-repeat; background-position:0 0; width:305px; height:36px; line-height:36px;cursor:pointer; border:none;}
+.log_btn:hover,.log_btn_click { background:url(../images/login/btn_login.png) no-repeat; background-position:0 -36px; width:305px; height:36px;}
+.log_btn_click { background-position:0 -72px;}
+#log_marginbot { margin:0 0 0 68px; font-size:14px; display:inline; float:left; width:200px;}
+#log_marginbot input { font-size:14px;font-family:微软雅黑}
+#error_box {margin:0; height:30px; line-height:30px;}
+#copyright { color:#878787; font-size:14px; text-align:center;width:200px;}
+

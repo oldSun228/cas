@@ -1,0 +1,30 @@
+﻿@charset "UTF-8";
+/* login-css */
+html,body {text-align:center; margin:0; background:url(../../images/login/top.png) repeat-x;color:#F3F4F8; width:100%; height:100%;}
+
+
+
+/*--------------fream----------------**/
+.all-box {width:1071px;height:720px;margin:0 auto;background:url(../../images/login/login-img.png) no-repeat center bottom; }
+.log-container {margin:0 auto;padding:0;width:1071px;padding:70px 0 0; display:block;}
+.logo-box { float:left; margin-left:170px;}
+.login-logo { float:left; background:url(../../images/login/login_logo.png) no-repeat; width:662px; height:104px;}
+.login-box { float:left; width:522px; height:374px; margin:70px 0 0 270px;display:inline-block;}
+
+.log-inner-box {float:left; width:392px;display:inline-block; margin:25px 0 0 70px;}
+.log-mid {float:left; width:340px; padding:20px 0 15px 0; margin:0; display:inline;}
+.login-user,.login-pwd { border-color:#999; height:40px;text-indent:20px;}
+.log-inner-box .btn-info { padding:8px 16px;background-color: #C12200;border-color:#A41400}
+.log-inner-box .form-control-feedback { left:0;height:40px; line-height:40px;color:#dedede;}
+
+.login-footer { padding:10px 0 0 0; border-top:solid 1px #ddd; float:left; display:block; width:100%; margin-top:106px;}
+.login-footer-inner { width:1071px; text-align:center;}
+.login-copyright { background:url(../../images/login/login-copyright.png) no-repeat; height:24px; display:inline-block; line-height:29px; padding-left:66px; font-size:12px;}
+
+/*login底部导航*/
+.breadcrumb-login {padding: 6px 0;margin-bottom: 5px;list-style: none;border-radius: 4px;font-size:12px; display:block;}
+.breadcrumb-login > li {display: inline-block;}
+.breadcrumb-login > li + li:before {padding: 0 5px;color: #999;content: "|\00a0";}
+.breadcrumb-login > .active {color: #777;}
+.breadcrumb-login a,.login-footer-font a{ color:#888;}
+.breadcrumb-login a:hover,.login-footer-font a:hover { color:#40accd;}
